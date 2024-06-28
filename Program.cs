@@ -9,9 +9,14 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-app.Run(async context =>
+app.Use(async (context, next) =>
 {
-    await context.Response.WriteAsync("Hello world!");
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation($"Request Host: {context.Request.Host}");
+    logger.LogInformation("My Middleware - Before");
+    await next(context);
+    logger.LogInformation("My Middleware - After");
+    logger.LogInformation($"Response StatusCode: {context.Response.StatusCode}");
 });
 
 // Configure the HTTP request pipeline.
