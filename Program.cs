@@ -39,9 +39,9 @@ app.Use(async (context, next) =>
 app.Map("/lottery", app => {
     var random = new Random();
     var luckyNumber = random.Next(1, 6);
-    app.UseWhen(context => context.Request.QueryString.Value == $"{luckyNumber.ToString()}", app => { 
+    app.UseWhen(context => context.Request.QueryString.Value == $"?{luckyNumber.ToString()}", app => {
         app.Run(async context => {
-            await context.Response.WriteAsync($"Congratulations! You won the lottery! Lucky number is{luckyNumber}");
+            await context.Response.WriteAsync($"Congratulations! You won the lottery! Lucky number is {luckyNumber}");
         });
     });
 
@@ -55,7 +55,7 @@ app.Map("/lottery", app => {
 
         app.UseWhen(context => context.Request.Headers["number"] == luckyNumber.ToString(), app => { 
             app.Run(async context => {
-                await context.Response.WriteAsync($"Congratulations! You won the lottery! Lucky number is{luckyNumber}");
+                await context.Response.WriteAsync($"Congratulations! You won the lottery! Lucky number is {luckyNumber}");
             });
         });
     });
