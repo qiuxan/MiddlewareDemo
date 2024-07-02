@@ -74,14 +74,21 @@ app.Use(async (context, next) =>
 //    });
 //});
 
-app.UseWhen(context => context.Request.Query.ContainsKey("branch"), app =>
+app.MapWhen(context => context.Request.Query.ContainsKey("branch"), app =>
 {
     app.Use(async (context, next) =>
     {
         var logger = app.ApplicationServices.GetRequiredService<ILogger<Program>>();
-        logger.LogInformation($"from usewhen(): branch used = {context.Request.Query["branch"]}");
+        logger.LogInformation($"from MapWhen(): branch used = {context.Request.Query["branch"]}");
         await next();
     });
+
+    app.Run(async context =>
+    {
+        var branchVer = context.Request.Query["branch"];
+        await context.Response.WriteAsync($"Branch used ={ branchVer}");
+    });
+
 });
 app.Run(async context =>
 {
