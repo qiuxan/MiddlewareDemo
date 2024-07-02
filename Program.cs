@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,22 +11,29 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddRateLimiter(_ =>
+    _.AddFixedWindowLimiter(policyName: "fixed", options => {
+        options.PermitLimit = 5;
+        options.Window = TimeSpan.FromSeconds(10);
+        options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        options.QueueLimit = 2;
+    }));
 
 var app = builder.Build();
 
-app.Use(async (context, next) =>
-{
-    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+//app.Use(async (context, next) =>
+//{
+//    var logger = app.Services.GetRequiredService<ILogger<Program>>();
 
-    logger.LogInformation($"ClientName HttpHeader in Middleware 1 {context.Request.Headers["ClientName"]}");
-    logger.LogInformation($"Add a ClientName HttpHeader in Middleware 1");
+//    logger.LogInformation($"ClientName HttpHeader in Middleware 1 {context.Request.Headers["ClientName"]}");
+//    logger.LogInformation($"Add a ClientName HttpHeader in Middleware 1");
 
-    context.Request.Headers.TryAdd("ClientName", "MyClient");
-    logger.LogInformation("My Middleware 1 - Before");
-    await next(context);
-    logger.LogInformation("My Middleware 1 - After");
-    logger.LogInformation($"Response StatusCode in Middleware 1:{ context.Response.StatusCode}");
-});
+//    context.Request.Headers.TryAdd("ClientName", "MyClient");
+//    logger.LogInformation("My Middleware 1 - Before");
+//    await next(context);
+//    logger.LogInformation("My Middleware 1 - After");
+//    logger.LogInformation($"Response StatusCode in Middleware 1:{ context.Response.StatusCode}");
+//});
 
 //app.Use(async (context, next) =>
 //{
@@ -74,26 +83,32 @@ app.Use(async (context, next) =>
 //    });
 //});
 
-app.MapWhen(context => context.Request.Query.ContainsKey("branch"), app =>
-{
-    app.Use(async (context, next) =>
-    {
-        var logger = app.ApplicationServices.GetRequiredService<ILogger<Program>>();
-        logger.LogInformation($"from MapWhen(): branch used = {context.Request.Query["branch"]}");
-        await next();
-    });
+//app.MapWhen(context => context.Request.Query.ContainsKey("branch"), app =>
+//{
+//    app.Use(async (context, next) =>
+//    {
+//        var logger = app.ApplicationServices.GetRequiredService<ILogger<Program>>();
+//        logger.LogInformation($"from MapWhen(): branch used = {context.Request.Query["branch"]}");
+//        await next();
+//    });
 
-    app.Run(async context =>
-    {
-        var branchVer = context.Request.Query["branch"];
-        await context.Response.WriteAsync($"Branch used ={ branchVer}");
-    });
+//    app.Run(async context =>
+//    {
+//        var branchVer = context.Request.Query["branch"];
+//        await context.Response.WriteAsync($"Branch used ={ branchVer}");
+//    });
 
-});
-app.Run(async context =>
-{
-    await context.Response.WriteAsync("hello world!");
-});
+//});
+//app.Run(async context =>
+//{
+//    await context.Response.WriteAsync("hello world!");
+//});
+
+
+
+app.UseRateLimiter();
+
+app.MapGet("/rate-limiting-mini", () => Results.Ok($"Hello {DateTime.Now.Ticks.ToString()}")).RequireRateLimiting("fixed");
 
 
 // Configure the HTTP request pipeline.
