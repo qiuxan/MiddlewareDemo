@@ -18,7 +18,7 @@ builder.Services.AddRateLimiter(_ =>
         options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         options.QueueLimit = 2;
     }));
-
+builder.Services.AddRequestTimeouts();
 var app = builder.Build();
 
 //app.Use(async (context, next) =>
@@ -108,6 +108,7 @@ var app = builder.Build();
 
 app.UseRateLimiter();
 
+app.UseRequestTimeouts();
 app.MapGet("/rate-limiting-mini", () => Results.Ok($"Hello {DateTime.Now.Ticks.ToString()}")).RequireRateLimiting("fixed");
 
 

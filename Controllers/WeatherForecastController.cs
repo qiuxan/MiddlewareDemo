@@ -1,11 +1,14 @@
+using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Logging;
+using System;
 
 namespace MiddlewareDemo.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class WeatherForecastController : ControllerBase
+public class WeatherForecastController(ILogger<WeatherForecastController> logger) : ControllerBase
 {
     private static readonly string[] Summaries = new[]
     {
@@ -13,11 +16,8 @@ public class WeatherForecastController : ControllerBase
     };
 
     private readonly ILogger<WeatherForecastController> _logger;
+    private readonly Random _random = new();
 
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
-    {
-        _logger = logger;
-    }
 
     [HttpGet(Name = "GetWeatherForecast")]
     public IEnumerable<WeatherForecast> Get()
@@ -36,5 +36,24 @@ public class WeatherForecastController : ControllerBase
     public ActionResult RateLimitingDemo()
     {
         return Ok($"Hello {DateTime.Now.Ticks.ToString()}");
+    }
+    [HttpGet("request-timeout")]
+    [RequestTimeout(5000)]
+    public async Task<ActionResult> RequestTimeoutDemo()
+    {
+        var delay = _random.Next(1, 10);
+        logger.LogInformation($"Delaying for {delay} seconds");
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(delay), Request.
+            HttpContext.RequestAborted);
+        }
+        catch
+        {
+            logger.LogWarning("The request timed out");
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+            "The request timed out");
+        }
+        return Ok($"Hello! The task is complete in {delay} seconds");
     }
 }
