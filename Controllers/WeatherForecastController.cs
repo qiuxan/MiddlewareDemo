@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace MiddlewareDemo.Controllers;
 
@@ -28,5 +29,12 @@ public class WeatherForecastController : ControllerBase
             Summary = Summaries[Random.Shared.Next(Summaries.Length)]
         })
         .ToArray();
+    }
+
+    [HttpGet("rate-limiting")]
+    [EnableRateLimiting(policyName: "fixed")]
+    public ActionResult RateLimitingDemo()
+    {
+        return Ok($"Hello {DateTime.Now.Ticks.ToString()}");
     }
 }
