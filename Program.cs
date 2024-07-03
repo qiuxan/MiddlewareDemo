@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.RateLimiting;
+using MiddlewareDemo;
 using System.Threading.RateLimiting;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -107,6 +108,8 @@ var app = builder.Build();
 
 
 app.UseRateLimiter();
+
+app.UseCorrelationId();
 
 app.UseRequestTimeouts();
 app.MapGet("/rate-limiting-mini", () => Results.Ok($"Hello {DateTime.Now.Ticks.ToString()}")).RequireRateLimiting("fixed");
